@@ -12,7 +12,7 @@ function polar(cx, cy, r, angleDeg) {
 
 function getArcColor(score, type) {
   if (type === 'competition') {
-    if (score < 40) return '#06b6d4'
+    if (score < 40) return '#22d3ee'
     if (score < 65) return '#f59e0b'
     return '#f43f5e'
   }
@@ -66,9 +66,9 @@ export default function SemiGauge({ score, label, type, factors }) {
   return (
     <div style={{
       background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 14, padding: 24, flex: '1 1 360px', minWidth: 0,
+      borderRadius: 8, padding: 24, flex: '1 1 360px', minWidth: 0,
     }}>
-      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: 'var(--text-dim)', marginBottom: 12 }}>
+      <div style={{ fontFamily: "var(--sans)", fontSize: 13, color: 'var(--text-dim)', marginBottom: 12 }}>
         {type === 'competition' ? 'Market Competitiveness' : 'Entry Opportunity'}
       </div>
 
@@ -98,19 +98,37 @@ export default function SemiGauge({ score, label, type, factors }) {
               const [ix, iy] = polar(cx, cy, r + 5, a)
               return <line key={tick} x1={ix} y1={iy} x2={ox} y2={oy} stroke="var(--border)" strokeWidth={1.5} />
             })}
-            {/* Labels */}
-            <text x={cx - r - 8} y={cy + 16} textAnchor="middle" fill="var(--border)" fontSize={9} fontFamily="Space Mono">0</text>
-            <text x={cx + r + 8} y={cy + 16} textAnchor="middle" fill="var(--border)" fontSize={9} fontFamily="Space Mono">100</text>
-          </svg>
-        </div>
 
-        <div style={{ marginTop: -14, textAlign: 'center' }}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 36, fontWeight: 700, color: 'var(--text-base)', lineHeight: 1 }}>
-            {Math.round(animated)}
-          </div>
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, color: getLabelColor(score, type), marginTop: 4 }}>
-            {label}
-          </div>
+            {/* Center speedometer readout */}
+            <text
+              x={cx}
+              y={82}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="var(--text-base)"
+              fontSize={36}
+              fontWeight={700}
+              fontFamily="var(--mono)"
+            >
+              {Math.round(animated)}
+            </text>
+            <text
+              x={cx}
+              y={110}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill={getLabelColor(score, type)}
+              fontSize={13}
+              fontWeight={600}
+              fontFamily="var(--sans)"
+            >
+              {label}
+            </text>
+
+            {/* Labels */}
+            <text x={cx - r - 8} y={cy + 16} textAnchor="middle" fill="var(--border)" fontSize={9} fontFamily="var(--mono)">0</text>
+            <text x={cx + r + 8} y={cy + 16} textAnchor="middle" fill="var(--border)" fontSize={9} fontFamily="var(--mono)">100</text>
+          </svg>
         </div>
       </div>
 
@@ -119,8 +137,8 @@ export default function SemiGauge({ score, label, type, factors }) {
         {factors.map((f, i) => (
           <div key={i}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'var(--text-dim)' }}>{f.name}</span>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: 'var(--text-muted)' }}>{f.value}</span>
+              <span style={{ fontFamily: "var(--sans)", fontSize: 11, color: 'var(--text-dim)' }}>{f.name}</span>
+              <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: 'var(--text-muted)' }}>{f.value}</span>
             </div>
             <div style={{ height: 4, background: 'var(--bg-deep)', borderRadius: 99, overflow: 'hidden' }}>
               <div style={{

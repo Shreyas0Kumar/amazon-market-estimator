@@ -19,7 +19,7 @@ function ProductThumb({ rank, imageUrl }) {
       background: `oklch(0.25 0.04 ${h})`,
       border: `1px solid oklch(0.35 0.05 ${h})`,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'Space Mono', monospace", fontSize: 10,
+      fontFamily: "var(--mono)", fontSize: 10,
       color: `oklch(0.6 0.1 ${h})`,
     }}>
       {rank}
@@ -34,12 +34,12 @@ function RevBar({ low, mid, high }) {
   const highPct = ((high - mid) / total) * 100
   return (
     <div>
-      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#06b6d4', marginBottom: 3 }}>
+      <div style={{ fontFamily: "var(--mono)", fontSize: 12, color: '#22d3ee', marginBottom: 3 }}>
         {fmt(mid)}
       </div>
       <div style={{ display: 'flex', height: 3, borderRadius: 99, overflow: 'hidden', width: 100 }}>
         <div style={{ width: `${lowPct}%`,  background: 'var(--border)' }} />
-        <div style={{ width: `${midPct}%`,  background: '#06b6d4' }} />
+        <div style={{ width: `${midPct}%`,  background: '#22d3ee' }} />
         <div style={{ width: `${highPct}%`, background: '#0e7490' }} />
       </div>
     </div>
@@ -74,7 +74,7 @@ export default function ProductsTable({ products }) {
   })
 
   return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -83,7 +83,7 @@ export default function ProductsTable({ products }) {
                 <th key={col.key} onClick={() => handleSort(col.key)} style={{
                   padding: '10px 16px',
                   textAlign: col.key === 'rank' ? 'center' : 'left',
-                  fontFamily: "'DM Sans', sans-serif", fontSize: 11,
+                  fontFamily: "var(--sans)", fontSize: 11,
                   color: 'var(--border-mid)', fontWeight: 500,
                   letterSpacing: '0.05em', textTransform: 'uppercase',
                   cursor: 'pointer', userSelect: 'none',
@@ -96,7 +96,7 @@ export default function ProductsTable({ products }) {
                 >
                   {col.label}
                   {sortKey === col.key && (
-                    <span style={{ marginLeft: 4, color: '#06b6d4' }}>{sortDir === 1 ? '↑' : '↓'}</span>
+                    <span style={{ marginLeft: 4, color: '#22d3ee' }}>{sortDir === 1 ? '↑' : '↓'}</span>
                   )}
                 </th>
               ))}
@@ -116,7 +116,7 @@ export default function ProductsTable({ products }) {
                   {hoverRow === i && (
                     <div style={{
                       position: 'absolute', left: 0, top: 0, bottom: 0,
-                      width: 2, background: '#06b6d4', boxShadow: '0 0 8px #06b6d4',
+                      width: 2, background: '#22d3ee', boxShadow: '0 0 8px #22d3ee',
                     }} />
                   )}
                   <ProductThumb rank={p.rank} imageUrl={p.image} />
@@ -124,18 +124,18 @@ export default function ProductsTable({ products }) {
                 <td style={{ padding: '11px 16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <a href={p.productUrl} target="_blank" rel="noopener noreferrer" style={{
-                      fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: 'var(--text-base)',
+                      fontFamily: "var(--sans)", fontSize: 13, color: 'var(--text-base)',
                       maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       display: 'block', textDecoration: 'none',
                     }}
-                      onMouseEnter={e => e.currentTarget.style.color = '#06b6d4'}
+                      onMouseEnter={e => e.currentTarget.style.color = '#22d3ee'}
                       onMouseLeave={e => e.currentTarget.style.color = 'var(--text-base)'}
                     >
                       {p.name}
                     </a>
                     {p.sponsored && (
                       <span style={{
-                        fontFamily: "'DM Sans', sans-serif", fontSize: 10,
+                        fontFamily: "var(--sans)", fontSize: 10,
                         color: 'var(--border-mid)', background: 'var(--bg-deep)',
                         border: '1px solid var(--border)', borderRadius: 4,
                         padding: '1px 6px', flexShrink: 0,
@@ -144,16 +144,16 @@ export default function ProductsTable({ products }) {
                   </div>
                 </td>
                 <td style={{ padding: '11px 16px' }}>
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: 'var(--text-dim)' }}>{p.brand}</span>
+                  <span style={{ fontFamily: "var(--sans)", fontSize: 12, color: 'var(--text-dim)' }}>{p.brand}</span>
                 </td>
                 <td style={{ padding: '11px 16px' }}>
-                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: 'var(--text-base)' }}>
+                  <span style={{ fontFamily: "var(--mono)", fontSize: 13, color: 'var(--text-base)' }}>
                     ${p.price.toFixed(2)}
                   </span>
                 </td>
                 <td style={{ padding: '11px 16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#f59e0b' }}>
+                    <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: '#f59e0b' }}>
                       {p.rating.toFixed(1)}
                     </span>
                     <svg width="10" height="10" viewBox="0 0 14 14">
@@ -162,7 +162,7 @@ export default function ProductsTable({ products }) {
                   </div>
                 </td>
                 <td style={{ padding: '11px 16px' }}>
-                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: 'var(--text-muted)' }}>
+                  <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: 'var(--text-muted)' }}>
                     {p.reviews.toLocaleString()}
                   </span>
                 </td>

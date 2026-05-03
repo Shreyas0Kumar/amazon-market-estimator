@@ -61,24 +61,24 @@ export default function HeroCards({ summary }) {
     {
       label: 'Est. Monthly Revenue',
       main: fmt(rev),
-      mainColor: '#06b6d4',
+      mainColor: '#22d3ee',
       extra: (
-        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: 'var(--text-dim)' }}>
+        <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: 'var(--text-dim)' }}>
           {fmt(data.estMonthlyRevenue.low)} — {fmt(data.estMonthlyRevenue.high)}
         </span>
       ),
-      accent: '#06b6d4',
+      accent: '#22d3ee',
     },
     {
       label: 'Avg. Price',
       main: (
         <span>
-          <span style={{ color: '#06b6d4', fontSize: '0.6em' }}>$</span>
+          <span style={{ color: '#22d3ee', fontSize: '0.6em' }}>$</span>
           {(price / 100).toFixed(2)}
         </span>
       ),
       mainColor: 'var(--text-base)',
-      extra: <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'var(--text-dim)' }}>Across top {data.productsAnalyzed}</span>,
+      extra: <span style={{ fontFamily: "var(--sans)", fontSize: 11, color: 'var(--text-dim)' }}>Across top {data.productsAnalyzed}</span>,
       accent: null,
     },
     {
@@ -92,7 +92,7 @@ export default function HeroCards({ summary }) {
       label: 'Reviews Analyzed',
       main: reviews.toLocaleString(),
       mainColor: 'var(--text-base)',
-      extra: <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'var(--text-dim)' }}>across {data.productsAnalyzed} products</span>,
+      extra: <span style={{ fontFamily: "var(--sans)", fontSize: 11, color: 'var(--text-dim)' }}>across {data.productsAnalyzed} products</span>,
       accent: '#f59e0b',
     },
   ]
@@ -102,7 +102,7 @@ export default function HeroCards({ summary }) {
       {cards.map((card, i) => (
         <div key={i} style={{
           background: 'var(--bg-card)', border: '1px solid var(--border)',
-          borderRadius: 14, padding: '22px 24px',
+          borderRadius: 8, padding: '22px 24px',
           position: 'relative', overflow: 'hidden',
           transition: 'border-color 0.2s',
         }}
@@ -115,11 +115,11 @@ export default function HeroCards({ summary }) {
               background: card.accent, boxShadow: `0 0 12px ${card.accent}88`,
             }} />
           )}
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: 'var(--text-dim)', marginBottom: 8, letterSpacing: '0.02em' }}>
+          <div style={{ fontFamily: "var(--sans)", fontSize: 12, color: 'var(--text-dim)', marginBottom: 8, letterSpacing: '0.02em' }}>
             {card.label}
           </div>
           <div style={{
-            fontFamily: "'Space Mono', monospace",
+            fontFamily: "var(--mono)",
             fontSize: 'clamp(22px, 2.5vw, 32px)', fontWeight: 700,
             color: card.mainColor, lineHeight: 1.1, marginBottom: 8, letterSpacing: '-0.02em',
           }}>

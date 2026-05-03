@@ -1,200 +1,303 @@
 import { useState, useEffect } from 'react'
 import Logo from './Logo.jsx'
 
-const LOADING_MESSAGES = [
-  'Fetching top products…',
-  'Calculating revenue estimates…',
-  'Analyzing competitive landscape…',
-  'Generating market insights…',
-  'Finalizing your report…',
+const STEPS = [
+  { pct: 15, msg: 'Fetching search results...' },
+  { pct: 32, msg: 'Scraping top listings...' },
+  { pct: 51, msg: 'Calculating revenue estimates...' },
+  { pct: 68, msg: 'Analyzing competitive landscape...' },
+  { pct: 82, msg: 'Running AI market analysis...' },
+  { pct: 95, msg: 'Compiling final report...' },
 ]
 
-const EXAMPLE_URLS = [
-  { label: 'Standing Desks', url: 'https://www.amazon.com/s?k=standing+desk' },
-  { label: 'Air Fryers',     url: 'https://www.amazon.com/s?k=air+fryer' },
-  { label: 'Yoga Mats',      url: 'https://www.amazon.com/s?k=yoga+mat' },
-]
+const EXAMPLES = ['bamboo cutting board', 'standing desk mat', 'air fryer accessories', 'yoga blocks']
+
+function timeAgo(isoString) {
+  const diff = Date.now() - new Date(isoString).getTime()
+  const mins = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
+  if (mins < 60) return `${Math.max(mins, 0)}m ago`
+  if (hours < 24) return `${hours}h ago`
+  return `${days}d ago`
+}
+
+function formatRevenue(value) {
+  const amount = Number(value) || 0
+  if (amount >= 1000000) return `$${(amount / 1000000).toFixed(amount >= 10000000 ? 0 : 1)}M/mo`
+  if (amount >= 1000) return `$${Math.round(amount / 1000)}K/mo`
+  return `$${Math.round(amount)}/mo`
+}
+
+function normalizeQuery(value) {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  return `https://www.amazon.com/s?k=${encodeURIComponent(trimmed).replace(/%20/g, '+')}`
+}
+
+function loadHistory() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem('nichescope_history') || '[]')
+    return Array.isArray(parsed) ? parsed : []
+  } catch (err) {
+    console.warn('Unable to load analysis history:', err)
+    return []
+  }
+}
+
+function LoadingTerminal({ step, progress }) {
+  return (
+    <div className="card" style={{ padding: '28px 28px 24px' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20,
+        paddingBottom: 16, borderBottom: '1px solid var(--line-1)',
+      }}>
+        <div style={{ display: 'flex', gap: 5 }}>
+          {['var(--red)', 'var(--amber)', 'var(--green)'].map(c => (
+            <div key={c} style={{ width: 10, height: 10, borderRadius: '50%', background: c, opacity: 0.75 }} />
+          ))}
+        </div>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--tx-4)' }}>
+          nichescope - analysis
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+        {STEPS.map((s, i) => (
+          <div key={s.msg} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            opacity: i <= step ? 1 : 0.2,
+            transition: 'opacity 0.3s',
+          }}>
+            <span style={{
+              fontFamily: 'var(--mono)', fontSize: 11,
+              color: i < step ? 'var(--green)' : i === step ? 'var(--cyan)' : 'var(--tx-4)',
+              width: 14, textAlign: 'center',
+            }}>
+              {i < step ? '✓' : i === step ? '>' : '.'}
+            </span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: i <= step ? 'var(--tx-2)' : 'var(--tx-4)' }}>
+              {s.msg}
+            </span>
+            {i === step && (
+              <span style={{ marginLeft: 'auto', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--cyan)' }}>
+                {s.pct}%
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ height: 2, background: 'var(--line-1)', borderRadius: 99, overflow: 'hidden' }}>
+        <div style={{
+          height: '100%', width: `${progress}%`, background: 'var(--cyan)',
+          transition: 'width 0.5s ease', borderRadius: 99,
+        }} />
+      </div>
+    </div>
+  )
+}
 
 export default function UrlInput({ onAnalyze, error, onClearError }) {
   const [url, setUrl] = useState('')
+  const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(false)
-  const [msgIdx, setMsgIdx] = useState(0)
-  const [msgVisible, setMsgVisible] = useState(true)
+  const [step, setStep] = useState(0)
   const [progress, setProgress] = useState(0)
   const [localError, setLocalError] = useState(null)
 
   const displayError = error || localError
 
   useEffect(() => {
+    setHistory(loadHistory())
+  }, [])
+
+  useEffect(() => {
     if (!loading) return
-    let p = 0
-    const prog = setInterval(() => {
-      p += Math.random() * 3 + 1
-      if (p >= 92) { clearInterval(prog); p = 92 }
-      setProgress(p)
-    }, 250)
-
     let idx = 0
-    const cycle = setInterval(() => {
-      setMsgVisible(false)
-      setTimeout(() => { idx = (idx + 1) % LOADING_MESSAGES.length; setMsgIdx(idx); setMsgVisible(true) }, 300)
-    }, 2200)
-
-    return () => { clearInterval(prog); clearInterval(cycle) }
+    setStep(0)
+    setProgress(STEPS[0].pct)
+    const interval = setInterval(() => {
+      idx += 1
+      if (idx < STEPS.length) {
+        setStep(idx)
+        setProgress(STEPS[idx].pct)
+      }
+    }, 900)
+    return () => clearInterval(interval)
   }, [loading])
 
-  async function handleSubmit(submitUrl) {
-    const target = (submitUrl || url).trim()
+  async function handleSubmit(value) {
+    const target = normalizeQuery(value || url)
     if (!target) return
     if (!target.includes('amazon.com')) {
-      setLocalError('Please enter a valid amazon.com URL')
+      setLocalError('Please enter an amazon.com URL or a product keyword')
       return
     }
+
     setLocalError(null)
     onClearError?.()
-    setUrl(target)
+    setUrl(value || url)
     setLoading(true)
-    setMsgIdx(0)
-    setMsgVisible(true)
-    setProgress(0)
     try {
       await onAnalyze(target)
     } catch (err) {
       setLoading(false)
       setProgress(0)
+      setStep(0)
       setLocalError(err.message)
     }
   }
 
+  function clearHistory() {
+    localStorage.removeItem('nichescope_history')
+    setHistory([])
+  }
+
   return (
     <div style={{
-      minHeight: '100vh', background: '#0a0f1e',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexDirection: 'column', position: 'relative', overflow: 'hidden',
+      minHeight: '100vh', background: 'var(--bg-0)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      position: 'relative', padding: '48px 20px',
     }}>
-      {/* Grid */}
       <div style={{
         position: 'absolute', inset: 0,
-        backgroundImage: 'linear-gradient(rgba(6,182,212,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.025) 1px, transparent 1px)',
-        backgroundSize: '40px 40px', pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute', top: '35%', left: '50%',
-        transform: 'translate(-50%,-50%)',
-        width: 800, height: 500,
-        background: 'radial-gradient(ellipse, rgba(6,182,212,0.06) 0%, transparent 65%)',
-        pointerEvents: 'none',
+        backgroundImage: 'linear-gradient(var(--line-1) 1px, transparent 1px), linear-gradient(90deg, var(--line-1) 1px, transparent 1px)',
+        backgroundSize: '48px 48px', pointerEvents: 'none',
       }} />
 
-      <div style={{
-        position: 'relative', zIndex: 1,
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        gap: 40, maxWidth: 640, width: '90%', padding: '0 20px',
-      }}>
-        <Logo size="md" />
-
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 'clamp(28px,4vw,42px)', fontWeight: 700,
-            color: '#f1f5f9', margin: 0, lineHeight: 1.15, letterSpacing: '-0.02em',
-          }}>
-            What market are you<br />
-            <span style={{ color: '#06b6d4' }}>entering?</span>
-          </h1>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, color: '#64748b', marginTop: 12 }}>
-            Paste any Amazon search, category, or Best Sellers URL
-          </p>
+      <div style={{ position: 'relative', zIndex: 1, width: 'min(680px, 92vw)' }}>
+        <div style={{ marginBottom: 48, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <Logo size="lg" />
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--tx-4)', letterSpacing: '0.1em' }}>
+            MARKET INTELLIGENCE
+          </span>
         </div>
 
-        <div style={{ width: '100%' }}>
-          {loading ? (
-            <div style={{
-              background: '#0f172a', border: '1px solid #1e293b',
-              borderRadius: 16, padding: '24px 28px',
-              display: 'flex', flexDirection: 'column', gap: 16,
+        {!loading ? (
+          <>
+            <h1 style={{
+              fontSize: 32, fontWeight: 700, color: 'var(--tx-1)',
+              letterSpacing: 0, marginBottom: 8, lineHeight: 1.15,
             }}>
-              <div style={{ height: 3, background: '#1e293b', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{
-                  height: '100%', width: `${progress}%`,
-                  background: 'linear-gradient(90deg, #06b6d4, #818cf8)',
-                  borderRadius: 99, transition: 'width 0.3s ease',
-                  boxShadow: '0 0 8px rgba(6,182,212,0.6)',
-                }} />
-              </div>
-              <div style={{
-                fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#94a3b8',
-                textAlign: 'center', opacity: msgVisible ? 1 : 0,
-                transition: 'opacity 0.3s ease',
-              }}>
-                {LOADING_MESSAGES[msgIdx]}
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <input
-                  type="text"
-                  value={url}
-                  onChange={e => setUrl(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                  placeholder="https://www.amazon.com/s?k=bamboo+cutting+board"
-                  style={{
-                    flex: 1, background: '#0f172a',
-                    border: '1px solid #1e293b', borderRadius: 12,
-                    padding: '15px 20px',
-                    fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#f1f5f9',
-                    outline: 'none', transition: 'border-color 0.15s, box-shadow 0.15s',
-                  }}
-                  onFocus={e => { e.target.style.borderColor = '#06b6d4'; e.target.style.boxShadow = '0 0 0 3px rgba(6,182,212,0.12)' }}
-                  onBlur={e => { e.target.style.borderColor = '#1e293b'; e.target.style.boxShadow = 'none' }}
-                />
-                <button
-                  onClick={() => handleSubmit()}
-                  style={{
-                    background: '#06b6d4', border: 'none', borderRadius: 12,
-                    padding: '15px 24px',
-                    fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 14,
-                    color: '#0a0f1e', cursor: 'pointer', whiteSpace: 'nowrap',
-                    transition: 'background 0.15s, transform 0.1s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#22d3ee' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#06b6d4' }}
-                  onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.97)' }}
-                  onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
-                >
-                  Analyze Market →
-                </button>
-              </div>
-              {displayError && (
-                <div style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 13,
-                  color: '#f43f5e',
-                }}>
-                  {displayError}
-                </div>
-              )}
+              Analyze any Amazon<br /><span style={{ color: 'var(--cyan)' }}>product market</span>
+            </h1>
+            <p style={{ fontSize: 14, color: 'var(--tx-3)', marginBottom: 28, lineHeight: 1.6, maxWidth: 620 }}>
+              Paste an Amazon search URL or enter a keyword to get revenue estimates, competitive scores, and AI-powered market insights.
+            </p>
 
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#475569' }}>Try:</span>
-                {EXAMPLE_URLS.map(({ label, url: u }) => (
-                  <button key={label} onClick={() => handleSubmit(u)} style={{
-                    background: 'transparent', border: '1px solid #1e293b',
-                    borderRadius: 99, padding: '4px 12px',
-                    fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#64748b',
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <input
+                type="text"
+                value={url}
+                onChange={e => setUrl(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                placeholder="https://www.amazon.com/s?k=bamboo+cutting+board or just a keyword"
+                style={{
+                  flex: 1, minWidth: 0, height: 44, padding: '0 14px',
+                  background: 'var(--bg-1)', border: '1px solid var(--line-2)', borderRadius: 7,
+                  color: 'var(--tx-1)', fontSize: 13, outline: 'none',
+                  transition: 'border-color 0.15s',
+                }}
+                onFocus={e => { e.target.style.borderColor = 'var(--cyan)' }}
+                onBlur={e => { e.target.style.borderColor = 'var(--line-2)' }}
+              />
+              <button
+                onClick={() => handleSubmit()}
+                style={{
+                  height: 44, padding: '0 20px', background: 'var(--cyan)', border: 'none',
+                  borderRadius: 7, fontWeight: 600, fontSize: 13, color: '#000',
+                  cursor: 'pointer', whiteSpace: 'nowrap', transition: 'opacity 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = '0.85' }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+              >
+                Analyze
+              </button>
+            </div>
+
+            {displayError && (
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--red)', marginBottom: 12 }}>
+                {displayError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--tx-4)' }}>examples:</span>
+              {EXAMPLES.map(example => (
+                <button
+                  key={example}
+                  onClick={() => handleSubmit(example)}
+                  style={{
+                    padding: '4px 10px', background: 'var(--bg-2)', border: '1px solid var(--line-2)',
+                    borderRadius: 5, fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--tx-3)',
                     cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s',
                   }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#06b6d4'; e.currentTarget.style.color = '#06b6d4' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#1e293b'; e.currentTarget.style.color = '#64748b' }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--cyan)'; e.currentTarget.style.color = 'var(--cyan)' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line-2)'; e.currentTarget.style.color = 'var(--tx-3)' }}
+                >
+                  {example}
+                </button>
+              ))}
             </div>
-          )}
-        </div>
+
+            {history.length > 0 && (
+              <div style={{ marginTop: 32 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span className="label">recent_analyses</span>
+                  <button type="button" onClick={clearHistory} style={{
+                    background: 'transparent', border: 0, color: 'var(--tx-4)',
+                    fontFamily: 'var(--mono)', fontSize: 10, cursor: 'pointer',
+                  }}>
+                    clear
+                  </button>
+                </div>
+                <div className="history-list">
+                  {history.map(item => (
+                    <button
+                      type="button"
+                      key={item.id}
+                      className="history-card card"
+                      onClick={() => handleSubmit(item.url)}
+                      style={{
+                        padding: '14px 16px', width: 280, flexShrink: 0,
+                        textAlign: 'left', cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                        <span style={{
+                          minWidth: 0, color: 'var(--tx-1)', fontWeight: 600, fontSize: 13,
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}>
+                          {item.query}
+                        </span>
+                        <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--tx-4)', flexShrink: 0 }}>
+                          {timeAgo(item.analyzedAt)}
+                        </span>
+                      </div>
+                      <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--cyan)', marginBottom: 8 }}>
+                        {formatRevenue(item.summary?.estMonthlyRevenue?.mid)}
+                      </div>
+                      <div style={{
+                        fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--tx-4)',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>
+                        {item.url}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <LoadingTerminal step={step} progress={progress} />
+        )}
+      </div>
+
+      <div style={{ position: 'fixed', bottom: 20, left: 24, fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--tx-4)' }}>
+        estimates based on review velocity model - +-40% confidence
       </div>
     </div>
   )
