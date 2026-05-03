@@ -1,100 +1,128 @@
 # NicheScope
 
-NicheScope is a full-stack Amazon market intelligence app. The React frontend accepts an Amazon URL and access PIN, then calls a FastAPI backend that scrapes competitor products, estimates revenue, scores market opportunity, and generates AI insights.
+> Amazon Market Intelligence — estimate monthly revenue, analyze competition,
+> and find entry opportunities for any Amazon niche in seconds.
 
-## Project Structure
+**Live Demo:** https://nichescope.shreyas.space  
+**Backend API:** https://nischescope-api.fly.dev/health
 
-- `frontend/` - Vite React app deployed to Cloudflare Pages
-- `backend/` - FastAPI API deployed to Fly.io
-- `.github/workflows/` - GitHub Actions deploy workflows
+---
 
-## Local Setup
+## What It Does
+
+NicheScope turns any Amazon product or search URL into a full market analysis dashboard in seconds. Paste an Amazon URL to estimate monthly revenue, compare competing products, inspect pricing and review patterns, and get AI-generated insights with practical recommendations for entering the niche.
+
+## Demo
+
+<!-- Add GIF or screenshot here -->
+
+## Tech Stack
+
+### Frontend
+
+- React
+- Vite
+- Tailwind CSS
+- Recharts
+- Cloudflare Pages
+
+### Backend
+
+- FastAPI
+- Python
+- Fly.io
+
+### APIs
+
+- Rainforest API for Amazon product and search data
+- OpenAI GPT-4o-mini for market insights
+
+### CI/CD
+
+- GitHub Actions
+
+## Features
+
+- [x] Monthly revenue estimation (low/mid/high range)
+- [x] Competitiveness and opportunity scoring
+- [x] Top 10 products table with sortable columns
+- [x] Revenue bar chart, price vs rating scatter chart
+- [x] Price, rating, and review distribution charts
+- [x] Brand leaderboard
+- [x] AI-generated market summary and opportunity analysis
+- [x] Actionable recommendations and risk flags
+- [x] Dark/light mode
+- [x] In-memory caching to minimize API usage
+- [x] PIN-protected access
+
+## Revenue Estimation Methodology
+
+NicheScope uses review velocity as a directional proxy for product demand, then converts estimated units into revenue using each product's current price.
+
+```text
+Est. Monthly Units = Review Count x multiplier
+```
+
+Multipliers:
+
+```text
+Low 0.03 | Mid 0.05 | High 0.08
+```
+
+Revenue estimate:
+
+```text
+Est. Revenue = Monthly Units x Price
+```
+
+When Best Sellers Rank data is available, NicheScope applies a BSR adjustment to refine the estimate. These numbers are designed to be directional market signals, not exact sales figures.
+
+## Running Locally
 
 ### Backend
 
 ```bash
 cd backend
-python -m venv .venv
-.venv\Scripts\activate
+cp .env.example .env
+# Fill in your API keys in .env
 pip install -r requirements.txt
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn main:app --reload --port 8000
 ```
-
-Backend environment variables:
-
-```text
-APP_PIN=1234
-RAINFOREST_API_KEY=...
-SCRAPINGDOG_API_KEY=...
-OPENAI_API_KEY=...
-CACHE_TTL_SECONDS=3600
-REDIS_URL=redis://localhost:6379
-```
-
-`REDIS_URL` is optional. If Redis is unavailable, the backend falls back to an in-memory cache.
 
 ### Frontend
 
 ```bash
 cd frontend
+cp .env.example .env
+# Set VITE_API_URL=http://localhost:8000 in .env
 npm install
 npm run dev
 ```
 
-Frontend environment variables:
+## Environment Variables
 
-```text
-VITE_API_URL=http://localhost:8000
-VITE_APP_PIN=1234
-```
+Backend (`.env`):
 
-## Tests
+- `RAINFOREST_API_KEY`
+- `OPENAI_API_KEY`
+- `APP_PIN`
+- `SCRAPINGDOG_API_KEY` (fallback)
+- `CACHE_TTL_SECONDS` (default 3600)
 
-Backend:
+Frontend (`.env`):
 
-```bash
-python -m pytest backend/tests/test_revenue.py
-```
-
-Frontend:
-
-```bash
-cd frontend
-npx vitest run
-```
+- `VITE_API_URL`
 
 ## Deployment
 
-Backend deploys to Fly.io with `.github/workflows/deploy-backend.yml`.
+Backend: Fly.io via Docker  
+Frontend: Cloudflare Pages  
+CI/CD: GitHub Actions auto-deploys on push to main
 
-Required GitHub secret:
+## Built By
 
-```text
-FLY_API_TOKEN
-```
+Shreyas Kumar  
+LinkedIn: https://www.linkedin.com/in/shreyas0kumar/  
+GitHub: https://github.com/Shreyas0Kumar
 
-Backend runtime secrets must be set in Fly:
-
-```bash
-fly secrets set APP_PIN=...
-fly secrets set RAINFOREST_API_KEY=...
-fly secrets set SCRAPINGDOG_API_KEY=...
-fly secrets set OPENAI_API_KEY=...
-```
-
-Frontend deploys to Cloudflare Pages with `.github/workflows/deploy-frontend.yml`.
-
-Required GitHub secrets:
-
-```text
-CLOUDFLARE_API_TOKEN
-CLOUDFLARE_ACCOUNT_ID
-VITE_API_URL
-VITE_APP_PIN
-```
-
-The production frontend origin is allowed by backend CORS:
-
-```text
-https://nichescope.shreyas.space
-```
+---
