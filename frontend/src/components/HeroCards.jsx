@@ -43,7 +43,15 @@ function Stars({ rating }) {
   )
 }
 
-export default function HeroCards({ data }) {
+export default function HeroCards({ summary }) {
+  const data = summary ?? {
+    estMonthlyRevenue: { mid: 0, low: 0, high: 0 },
+    avgPrice: 0,
+    avgRating: 0,
+    reviewsAnalyzed: 0,
+    productsAnalyzed: 0,
+  }
+
   const rev     = useCountUp(data.estMonthlyRevenue.mid, 1400)
   const price   = useCountUp(Math.round(data.avgPrice * 100), 1000)
   const rating  = useCountUp(Math.round(data.avgRating * 10), 900)

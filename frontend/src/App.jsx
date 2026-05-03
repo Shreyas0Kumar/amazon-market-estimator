@@ -17,8 +17,9 @@ export default function App() {
 
   async function handleAnalyze(url) {
     setError(null)
-    const transformedResult = await analyzeUrl(url, pin)
-    setData(transformedResult)
+    const result = await analyzeUrl(url, pin)
+    console.log('TRANSFORMED:', JSON.stringify(result?.summary))
+    setData(result)
     setScreen('dashboard')
   }
 

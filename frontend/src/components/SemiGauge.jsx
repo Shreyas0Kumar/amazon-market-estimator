@@ -44,7 +44,7 @@ export default function SemiGauge({ score, label, type, factors }) {
     return () => clearTimeout(t)
   }, [score])
 
-  const cx = 100, cy = 92, r = 70
+  const cx = 120, cy = 116, r = 82
   const pct = animated / 100
 
   // Arc spans from 180° (left) to 0° (right), sweeping upward through 90° (top).
@@ -66,43 +66,45 @@ export default function SemiGauge({ score, label, type, factors }) {
   return (
     <div style={{
       background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 14, padding: 24, flex: 1,
+      borderRadius: 14, padding: 24, flex: '1 1 360px', minWidth: 0,
     }}>
       <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: 'var(--text-dim)', marginBottom: 12 }}>
         {type === 'competition' ? 'Market Competitiveness' : 'Entry Opportunity'}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <svg width={200} height={114} viewBox="0 0 200 114" style={{ overflow: 'visible' }}>
-          {/* Background track */}
-          <path
-            d={`M ${bx1} ${by1} A ${r} ${r} 0 0 1 ${bx2} ${by2}`}
-            fill="none" stroke="var(--bg-deep)" strokeWidth={10} strokeLinecap="round"
-          />
-          {/* Filled arc (only draw if animated > 0) */}
-          {animated > 0.2 && (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 6 }}>
+        <div style={{ width: 'min(100%, 300px)', aspectRatio: '240 / 150' }}>
+          <svg width="100%" height="100%" viewBox="0 0 240 150" style={{ display: 'block', overflow: 'hidden' }}>
+            {/* Background track */}
             <path
-              d={`M ${sx} ${sy} A ${r} ${r} 0 ${largeArc} 1 ${ex} ${ey}`}
-              fill="none"
-              stroke={arcColor}
-              strokeWidth={10}
-              strokeLinecap="round"
-              style={{ filter: `drop-shadow(0 0 6px ${arcColor}88)`, transition: 'stroke 0.3s' }}
+              d={`M ${bx1} ${by1} A ${r} ${r} 0 0 1 ${bx2} ${by2}`}
+              fill="none" stroke="var(--bg-deep)" strokeWidth={12} strokeLinecap="round"
             />
-          )}
-          {/* Tick marks at 0, 25, 50, 75, 100 */}
-          {[0, 25, 50, 75, 100].map(tick => {
-            const a = 180 - tick * 1.8   // 0→180°, 100→0°
-            const [ox, oy] = polar(cx, cy, r + 13, a)
-            const [ix, iy] = polar(cx, cy, r + 5, a)
-            return <line key={tick} x1={ix} y1={iy} x2={ox} y2={oy} stroke="var(--border)" strokeWidth={1.5} />
-          })}
-          {/* Labels */}
-          <text x={cx - r - 8} y={cy + 16} textAnchor="middle" fill="var(--border)" fontSize={9} fontFamily="Space Mono">0</text>
-          <text x={cx + r + 8} y={cy + 16} textAnchor="middle" fill="var(--border)" fontSize={9} fontFamily="Space Mono">100</text>
-        </svg>
+            {/* Filled arc (only draw if animated > 0) */}
+            {animated > 0.2 && (
+              <path
+                d={`M ${sx} ${sy} A ${r} ${r} 0 ${largeArc} 1 ${ex} ${ey}`}
+                fill="none"
+                stroke={arcColor}
+                strokeWidth={12}
+                strokeLinecap="round"
+                style={{ filter: `drop-shadow(0 0 6px ${arcColor}88)`, transition: 'stroke 0.3s' }}
+              />
+            )}
+            {/* Tick marks at 0, 25, 50, 75, 100 */}
+            {[0, 25, 50, 75, 100].map(tick => {
+              const a = 180 - tick * 1.8   // 0→180°, 100→0°
+              const [ox, oy] = polar(cx, cy, r + 13, a)
+              const [ix, iy] = polar(cx, cy, r + 5, a)
+              return <line key={tick} x1={ix} y1={iy} x2={ox} y2={oy} stroke="var(--border)" strokeWidth={1.5} />
+            })}
+            {/* Labels */}
+            <text x={cx - r - 8} y={cy + 16} textAnchor="middle" fill="var(--border)" fontSize={9} fontFamily="Space Mono">0</text>
+            <text x={cx + r + 8} y={cy + 16} textAnchor="middle" fill="var(--border)" fontSize={9} fontFamily="Space Mono">100</text>
+          </svg>
+        </div>
 
-        <div style={{ marginTop: -16, textAlign: 'center' }}>
+        <div style={{ marginTop: -14, textAlign: 'center' }}>
           <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 36, fontWeight: 700, color: 'var(--text-base)', lineHeight: 1 }}>
             {Math.round(animated)}
           </div>

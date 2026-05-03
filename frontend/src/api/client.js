@@ -1,3 +1,4 @@
+console.log('API URL:', import.meta.env.VITE_API_URL)
 import { transformApiResponse } from './transform.js'
 
 export async function analyzeUrl(url, pin) {

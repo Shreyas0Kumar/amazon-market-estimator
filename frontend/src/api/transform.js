@@ -1,70 +1,80 @@
 export function transformApiResponse(apiData) {
-  const marketSummary = apiData.market_summary
-  const scoring = apiData.scoring
-  const distributions = apiData.distributions
-  const aiInsights = apiData.ai_insights
+  try {
+    const a = apiData?.analysis
 
-  return {
-    query: apiData.query_keyword,
-    summary: {
-      estMonthlyRevenue: {
-        mid: marketSummary.total_estimated_monthly_revenue_mid,
-        low: marketSummary.total_estimated_monthly_revenue_low,
-        high: marketSummary.total_estimated_monthly_revenue_high,
+    if (!a) throw new Error('No analysis field in response')
+
+    const competitors = a.competitors ?? []
+    const avgRating = competitors.length
+      ? competitors.reduce((sum, p) => sum + (p.rating ?? 0), 0) / competitors.length
+      : 0
+    const reviewsAnalyzed = competitors.reduce((sum, p) => sum + (p.review_count ?? 0), 0)
+
+    return {
+      query: a.niche ?? 'Unknown',
+      summary: {
+        estMonthlyRevenue: {
+          mid: a.market_totals?.total_revenue_mid ?? 0,
+          low: a.market_totals?.total_revenue_low ?? 0,
+          high: a.market_totals?.total_revenue_high ?? 0,
+        },
+        avgPrice: a.avg_price ?? 0,
+        avgRating: Math.round(avgRating * 10) / 10,
+        reviewsAnalyzed,
+        productsAnalyzed: competitors.length,
       },
-      avgPrice: marketSummary.average_price,
-      avgRating: marketSummary.average_rating,
-      reviewsAnalyzed: marketSummary.total_reviews,
-      productsAnalyzed: apiData.total_products_analyzed,
-    },
-    scores: {
-      competitiveness: {
-        score: scoring.competitiveness_score,
-        label: scoring.competitiveness_label,
-        factors: [
-          { name: 'Review Depth', value: scoring.competitiveness_factors.avg_review_count_normalized },
-          { name: 'Brand Concentration', value: scoring.competitiveness_factors.top_brand_concentration },
-          { name: 'Rating Barrier', value: scoring.competitiveness_factors.avg_rating_barrier },
-        ],
+      scores: {
+        competitiveness: {
+          score: a.competitiveness?.score ?? 0,
+          label: a.competitiveness?.label ?? 'Unknown',
+          factors: [
+            { name: 'Review Depth', value: a.competitiveness?.factors?.avg_review_count_normalized ?? 0 },
+            { name: 'Brand Concentration', value: a.competitiveness?.factors?.top_brand_concentration ?? 0 },
+            { name: 'Rating Barrier', value: a.competitiveness?.factors?.avg_rating_barrier ?? 0 },
+          ],
+        },
+        opportunity: {
+          score: a.opportunity?.score ?? 0,
+          label: a.opportunity?.label ?? 'Unknown',
+          factors: [
+            { name: 'Review Gap', value: a.opportunity?.factors?.review_gap ?? 0 },
+            { name: 'Price Gap', value: a.opportunity?.factors?.price_gap ?? 0 },
+            { name: 'Rating Gap', value: a.opportunity?.factors?.rating_gap ?? 0 },
+          ],
+        },
       },
-      opportunity: {
-        score: scoring.opportunity_score,
-        label: scoring.opportunity_label,
-        factors: [
-          { name: 'Review Gap', value: scoring.opportunity_factors.review_gap },
-          { name: 'Price Gap', value: scoring.opportunity_factors.price_gap },
-          { name: 'Rating Gap', value: scoring.opportunity_factors.rating_gap },
-        ],
+      products: competitors.map(p => ({
+        rank: p.rank ?? 0,
+        name: p.title ?? '',
+        brand: p.brand ?? 'Unknown',
+        price: p.price ?? 0,
+        rating: p.rating ?? 0,
+        reviews: p.review_count ?? 0,
+        revenue: {
+          low: p.revenue?.monthly_revenue_low ?? 0,
+          mid: p.revenue?.monthly_revenue_mid ?? 0,
+          high: p.revenue?.monthly_revenue_high ?? 0,
+        },
+        sponsored: p.is_sponsored ?? false,
+        image: p.image_url ?? null,
+      })),
+      brands: (a.top_brands ?? []).map(b => ({
+        name: b.brand ?? 'Unknown',
+        products: b.product_count ?? 0,
+        rating: b.avg_rating ?? 0,
+      })),
+      priceDistribution: (a.distributions?.price_buckets ?? []).map(b => ({ label: b.range, count: b.count })),
+      ratingDistribution: (a.distributions?.rating_buckets ?? []).map(b => ({ label: b.range, count: b.count })),
+      reviewDistribution: (a.distributions?.review_buckets ?? []).map(b => ({ label: b.range, count: b.count })),
+      aiInsights: {
+        summary: a.insights?.market_summary ?? '',
+        opportunity: a.insights?.opportunity_analysis ?? '',
       },
-    },
-    products: apiData.top_products.map(p => ({
-      rank: p.rank,
-      name: p.title,
-      brand: p.brand,
-      price: p.price,
-      rating: p.rating,
-      reviews: p.review_count,
-      revenue: {
-        low: p.revenue_estimate.monthly_revenue_low,
-        mid: p.revenue_estimate.monthly_revenue_mid,
-        high: p.revenue_estimate.monthly_revenue_high,
-      },
-      sponsored: p.is_sponsored,
-      image: p.image_url || null,
-    })),
-    brands: apiData.top_brands.map(b => ({
-      name: b.brand,
-      products: b.product_count,
-      rating: b.avg_rating,
-    })),
-    priceDistribution: distributions.price_buckets.map(b => ({ label: b.range, count: b.count })),
-    ratingDistribution: distributions.rating_buckets.map(b => ({ label: b.range, count: b.count })),
-    reviewDistribution: distributions.review_buckets.map(b => ({ label: b.range, count: b.count })),
-    aiInsights: {
-      summary: aiInsights.market_summary,
-      opportunity: aiInsights.opportunity_analysis,
-    },
-    recommendations: aiInsights.recommendations,
-    risks: aiInsights.risk_flags,
+      recommendations: a.insights?.recommendations ?? [],
+      risks: a.insights?.risk_flags ?? [],
+    }
+  } catch (err) {
+    console.error('Transform failed:', err)
+    throw err
   }
 }
