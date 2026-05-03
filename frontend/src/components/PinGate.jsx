@@ -105,9 +105,6 @@ export default function PinGate({ onSuccess }) {
               />
             ))}
           </div>
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#334155' }}>
-            Hint: check your .env file for APP_PIN
-          </div>
         </div>
       </div>
     </div>

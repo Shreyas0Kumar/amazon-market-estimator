@@ -1,10 +1,12 @@
 name: Deploy Frontend to Cloudflare Pages
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
       - "frontend/**"
+      - ".github/workflows/deploy-frontend.yml"
 
 jobs:
   deploy:
@@ -22,4 +24,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy frontend/dist --project-name=amazon-market-estim
+          command: pages deploy frontend/dist --project-name=nichescope
