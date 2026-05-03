@@ -1,18 +1,16 @@
-console.log('API URL:', import.meta.env.VITE_API_URL)
+import axios from 'axios'
 import { transformApiResponse } from './transform.js'
 
 export async function analyzeUrl(url, pin) {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/analyze`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url, pin }),
-  })
+  try {
+    const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/analyze`, { url, pin })
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.message || `Request failed: ${res.status}`)
+    return transformApiResponse(res.data)
+  } catch (err) {
+    const message = err.response?.data?.message
+      || err.response?.data?.error
+      || err.message
+      || 'Network error'
+    throw new Error(message)
   }
-
-  const data = await res.json()
-  return transformApiResponse(data)
 }

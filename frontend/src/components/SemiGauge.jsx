@@ -56,7 +56,7 @@ export default function SemiGauge({ score, label, type, factors }) {
 
   const [sx, sy] = polar(cx, cy, r, startDeg)
   const [ex, ey] = polar(cx, cy, r, endDeg)
-  const largeArc  = pct > 0.5 ? 1 : 0
+  const largeArc  = 0
   const arcColor  = getArcColor(score, type)
 
   // Background full track: 180° → 0°
