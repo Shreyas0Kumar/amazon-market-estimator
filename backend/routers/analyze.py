@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
@@ -30,6 +32,7 @@ from services.scoring import competitiveness_score, opportunity_score
 from services.scraper import ScraperException, scrape_competitors
 
 router = APIRouter()
+pending_requests: dict[str, asyncio.Task[AnalyzeResponse | JSONResponse]] = {}
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)
@@ -46,17 +49,29 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse | JSONResponse:
             content={"error": "invalid_url", "message": "URL must be an amazon.com link"},
         )
 
+    if request.url in pending_requests:
+        return await pending_requests[request.url]
+
+    task = asyncio.create_task(_run_analysis(request.url))
+    pending_requests[request.url] = task
     try:
-        cached = cache.get(request.url)
+        return await task
+    finally:
+        pending_requests.pop(request.url, None)
+
+
+async def _run_analysis(url: str) -> AnalyzeResponse | JSONResponse:
+    try:
+        cached = cache.get(url)
         if cached is not None:
             return AnalyzeResponse(
-                url=request.url,
+                url=url,
                 cached=True,
                 cache_hit=True,
                 analysis=cached,
             )
 
-        raw_products = await scrape_competitors(request.url)
+        raw_products = await scrape_competitors(url)
 
         # Per-product revenue
         products_with_revenue = []
@@ -143,9 +158,9 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse | JSONResponse:
             competitors=competitors,
         )
 
-        cache.set(request.url, analysis)
+        cache.set(url, analysis)
         return AnalyzeResponse(
-            url=request.url,
+            url=url,
             cached=False,
             cache_hit=False,
             analysis=analysis,

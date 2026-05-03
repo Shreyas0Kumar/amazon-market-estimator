@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     APP_PIN: str = ""
     CACHE_TTL_SECONDS: int = 3600
+    REDIS_URL: str = "redis://localhost:6379"
 
     class Config:
         env_file = ".env"

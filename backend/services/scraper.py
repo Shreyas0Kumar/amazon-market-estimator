@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any
 
@@ -12,6 +13,8 @@ SCRAPINGDOG_BASE = "https://api.scrapingdog.com/amazon/"
 
 MIN_PRODUCTS = 3
 MAX_PRODUCTS = 10
+
+logger = logging.getLogger(__name__)
 
 
 class ScraperException(Exception):
@@ -29,6 +32,8 @@ def _detect_url_type(url: str) -> str:
         return "bestsellers"
     if "/b?" in url or "node=" in url:
         return "category"
+    if "/dp/" in url or "/gp/product/" in url:
+        return "product"
     # default to search so Rainforest can attempt to resolve it
     return "search"
 
@@ -205,9 +210,28 @@ def _normalize(rank: int, item: dict[str, Any]) -> dict[str, Any] | None:
 
 def _extract_items(data: dict[str, Any], url_type: str) -> list[dict[str, Any]]:
     if url_type == "bestsellers":
-        return data.get("bestsellers", [])[:MAX_PRODUCTS]
-    # search and category both surface under search_results
-    return data.get("search_results", [])[:MAX_PRODUCTS]
+        return data.get("bestsellers", [])
+    if url_type == "category":
+        return data.get("category_results") or data.get("search_results", [])
+    if url_type == "product":
+        items: list[dict[str, Any]] = []
+        for key in (
+            "similar_products",
+            "also_viewed",
+            "also_bought",
+            "sponsored_products",
+            "frequently_bought_together",
+        ):
+            value = data.get(key)
+            if isinstance(value, list):
+                items.extend(item for item in value if isinstance(item, dict))
+        product = data.get("product")
+        if isinstance(product, dict):
+            items.insert(0, product)
+        return items
+    # Search endpoints normally surface under search_results, but keep a couple
+    # of fallback keys for provider variants and mocked responses.
+    return data.get("search_results", []) or data.get("products", []) or data.get("results", [])
 
 
 # ---------------------------------------------------------------------------
@@ -223,18 +247,33 @@ async def _call_rainforest(url: str, url_type: str, client: httpx.AsyncClient) -
         "url": url,
     }
     resp = await client.get(RAINFOREST_BASE, params=params, timeout=30)
+    logger.debug(
+        "Rainforest API response status=%s body_first_500=%r",
+        resp.status_code,
+        resp.text[:500],
+    )
     if not resp.is_success:
-        body = resp.json()
+        try:
+            body = resp.json()
+        except ValueError:
+            body = {}
         msg = body.get("request_info", {}).get("message") or resp.text
         raise ScraperException(f"Rainforest API error {resp.status_code}: {msg}")
     data: dict = resp.json()
 
     raw_items = _extract_items(data, url_type)
+    logger.debug(
+        "Rainforest extracted %s product candidate(s) before filtering for url_type=%s",
+        len(raw_items),
+        url_type,
+    )
     products = []
     for i, item in enumerate(raw_items, start=1):
         normalized = _normalize(i, item)
         if normalized:
             products.append(normalized)
+        if len(products) >= MAX_PRODUCTS:
+            break
 
     return products
 
@@ -265,13 +304,13 @@ async def _call_scrapingdog(url: str, client: httpx.AsyncClient) -> list[dict]:
 
     # Scrapingdog returns either a list directly or {"products": [...]}
     raw_items: list = data if isinstance(data, list) else data.get("products", [])
-    raw_items = raw_items[:MAX_PRODUCTS]
-
     products = []
     for i, item in enumerate(raw_items, start=1):
         normalized = _normalize(i, item)
         if normalized:
             products.append(normalized)
+        if len(products) >= MAX_PRODUCTS:
+            break
 
     return products
 
@@ -287,6 +326,7 @@ async def scrape_competitors(url: str) -> list[dict[str, Any]]:
     Raises ScraperException if fewer than 3 priced products are found.
     """
     url_type = _detect_url_type(url)
+    logger.debug("Detected Amazon URL type=%s for url=%s", url_type, url)
 
     async with httpx.AsyncClient() as client:
         products: list[dict] = []

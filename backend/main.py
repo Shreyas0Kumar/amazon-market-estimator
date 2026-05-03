@@ -9,8 +9,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://nichescope.shreyas.space",  # update after you know the real URL
-        "*"  # temporary — lock down after first deploy
+        "https://nichescope.pages.dev",
+        "https://nichescope.shreyas.space",
     ],
     allow_methods=["*"],
     allow_headers=["*"],
