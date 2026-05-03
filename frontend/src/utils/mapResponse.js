@@ -72,9 +72,6 @@ export function mapApiResponse(apiData, url) {
       products: b.product_count,
       rating:   b.avg_rating,
     })),
-    priceDistribution:  (a.distributions?.price_buckets  ?? []).map(b => ({ label: b.range, count: b.count })),
-    ratingDistribution: (a.distributions?.rating_buckets ?? []).map(b => ({ label: b.range, count: b.count })),
-    reviewDistribution: (a.distributions?.review_buckets ?? []).map(b => ({ label: b.range, count: b.count })),
     aiInsights: {
       summary:     a.insights?.market_summary       ?? '',
       opportunity: a.insights?.opportunity_analysis ?? '',

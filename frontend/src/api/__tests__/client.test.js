@@ -50,11 +50,6 @@ const apiResponse = {
       },
     ],
     top_brands: [{ brand: 'Acme', product_count: 1, avg_rating: 4.5 }],
-    distributions: {
-      price_buckets: [{ range: '$10-$20', count: 1 }],
-      rating_buckets: [{ range: '4-5', count: 1 }],
-      review_buckets: [{ range: '0-100', count: 1 }],
-    },
     insights: {
       market_summary: 'Stable market',
       opportunity_analysis: 'Good opening',
@@ -73,9 +68,10 @@ describe('analyzeUrl', () => {
     axios.post.mockResolvedValue({ status: 200, data: apiResponse })
 
     const result = await analyzeUrl('https://www.amazon.com/s?k=cutting+board', '1234')
+    const expectedBaseUrl = import.meta.env.VITE_API_URL || 'https://nischescope-api.fly.dev'
 
     expect(axios.post).toHaveBeenCalledWith(
-      `${import.meta.env.VITE_API_URL}/api/analyze`,
+      `${expectedBaseUrl}/api/analyze`,
       { url: 'https://www.amazon.com/s?k=cutting+board', pin: '1234' },
     )
     expect(result).toMatchObject({

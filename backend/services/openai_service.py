@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
+import httpx
 from openai import AsyncOpenAI
 
 from config import settings
@@ -198,19 +199,20 @@ async def generate_market_insights(
     }
 
     try:
-        client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
         user_prompt = _build_user_prompt(products, market_summary, scoring)
 
-        response = await client.chat.completions.create(
-            model=_MODEL,
-            max_tokens=800,
-            temperature=0.4,
-            response_format={"type": "json_object"},
-            messages=[
-                {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user",   "content": user_prompt},
-            ],
-        )
+        async with httpx.AsyncClient(trust_env=False) as http_client:
+            client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY, http_client=http_client)
+            response = await client.chat.completions.create(
+                model=_MODEL,
+                max_tokens=800,
+                temperature=0.4,
+                response_format={"type": "json_object"},
+                messages=[
+                    {"role": "system", "content": _SYSTEM_PROMPT},
+                    {"role": "user",   "content": user_prompt},
+                ],
+            )
 
         parsed = json.loads(response.choices[0].message.content)
         return {

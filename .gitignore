@@ -1,1 +1,5 @@
 .env
+*.zip
+.pixii-design-ref/
+frontend/*run*.log
+frontend/node_modules/

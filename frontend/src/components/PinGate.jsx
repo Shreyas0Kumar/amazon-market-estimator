@@ -34,48 +34,41 @@ export default function PinGate({ onSuccess }) {
 
   return (
     <div style={{
-      minHeight: '100vh', background: '#0a0f1e',
+      minHeight: '100vh', background: 'var(--bg-0)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      position: 'relative', overflow: 'hidden',
+      position: 'relative', overflow: 'hidden', padding: 20,
     }}>
-      {/* Grid texture */}
       <div style={{
         position: 'absolute', inset: 0,
-        backgroundImage: 'linear-gradient(rgba(6,182,212,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.03) 1px, transparent 1px)',
-        backgroundSize: '40px 40px', pointerEvents: 'none',
-      }} />
-      {/* Radial glow */}
-      <div style={{
-        position: 'absolute', top: '50%', left: '50%',
-        transform: 'translate(-50%,-50%)',
-        width: 600, height: 600,
-        background: 'radial-gradient(circle, rgba(6,182,212,0.08) 0%, transparent 70%)',
+        backgroundImage: 'linear-gradient(var(--line-1) 1px, transparent 1px), linear-gradient(90deg, var(--line-1) 1px, transparent 1px)',
+        backgroundSize: '48px 48px',
         pointerEvents: 'none',
       }} />
 
       <div style={{
-        position: 'relative', zIndex: 1,
-        background: 'rgba(15,23,42,0.85)',
-        border: '1px solid #1e293b',
-        borderRadius: 20,
-        padding: '48px 52px',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32,
-        backdropFilter: 'blur(20px)',
-        boxShadow: '0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(6,182,212,0.08)',
-        animation: shake ? 'shake 0.5s' : success ? 'fadeUp 0.4s ease' : 'none',
+        position: 'relative', zIndex: 1, width: 340,
       }}>
-        <Logo size="md" />
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#64748b', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            Amazon Market Intelligence
-          </div>
+        <div style={{ marginBottom: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <Logo size="lg" />
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--tx-4)', letterSpacing: '0.1em' }}>
+            MARKET INTELLIGENCE
+          </span>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#94a3b8' }}>
-            Enter your access PIN
+        <div style={{
+          background: 'var(--bg-1)',
+          border: `1px solid ${shake ? 'rgba(248,113,113,0.4)' : 'var(--line-1)'}`,
+          borderRadius: 10,
+          padding: '32px 28px',
+          transition: 'border-color 0.2s',
+          animation: shake ? 'shake 0.5s' : success ? 'fadeUp 0.4s ease' : 'none',
+        }}>
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx-1)', marginBottom: 4 }}>Access PIN</div>
+            <div style={{ fontSize: 13, color: 'var(--tx-3)' }}>Enter your 4-digit access code</div>
           </div>
-          <div style={{ display: 'flex', gap: 12 }}>
+
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 20 }}>
             {digits.map((d, i) => (
               <input
                 key={i}
@@ -88,16 +81,16 @@ export default function PinGate({ onSuccess }) {
                 onKeyDown={e => handleKey(i, e)}
                 onFocus={() => setFocusIdx(i)}
                 style={{
-                  width: 56, height: 64,
-                  background: '#0f172a',
-                  border: `1px solid ${focusIdx === i ? '#06b6d4' : '#1e293b'}`,
-                  borderRadius: 12,
+                  width: 56, height: 60,
+                  background: 'var(--bg-2)',
+                  border: `1.5px solid ${focusIdx === i ? 'var(--cyan)' : 'var(--line-2)'}`,
+                  borderRadius: 7,
                   textAlign: 'center',
-                  fontSize: 24,
-                  color: '#f1f5f9',
-                  fontFamily: "'Space Mono', monospace",
+                  fontSize: 22,
+                  color: 'var(--tx-1)',
+                  fontFamily: 'var(--mono)',
                   outline: 'none',
-                  boxShadow: focusIdx === i ? '0 0 0 3px rgba(6,182,212,0.15), 0 0 16px rgba(6,182,212,0.1)' : 'none',
+                  boxShadow: focusIdx === i ? '0 0 0 3px var(--cyan-dim)' : 'none',
                   transition: 'border-color 0.15s, box-shadow 0.15s',
                   caretColor: 'transparent',
                   cursor: 'default',
@@ -105,6 +98,14 @@ export default function PinGate({ onSuccess }) {
               />
             ))}
           </div>
+
+          <div style={{ textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--tx-4)' }}>
+            {success ? <span style={{ color: 'var(--green)' }}>Access granted</span> : 'Secure workspace'}
+          </div>
+        </div>
+
+        <div style={{ marginTop: 16, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--tx-4)' }}>
+          v2.4.1 - Amazon Market Intelligence Suite
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 export default function RiskFlags({ risks }) {
   return (
-    <div style={{ width: 300, flexShrink: 0 }}>
-      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 12 }}>
+    <div style={{ flex: '0 1 380px', minWidth: 300 }}>
+      <div style={{ fontFamily: "var(--sans)", fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 12 }}>
         Risk Flags
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -12,7 +12,7 @@ export default function RiskFlags({ risks }) {
             border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10,
           }}>
             <span style={{ color: '#22c55e', fontSize: 14 }}>✓</span>
-            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#22c55e' }}>No major risks identified</span>
+            <span style={{ fontFamily: "var(--sans)", fontSize: 12, color: '#22c55e' }}>No major risks identified</span>
           </div>
         ) : risks.map((risk, i) => (
           <div key={i} style={{
@@ -30,7 +30,7 @@ export default function RiskFlags({ risks }) {
               <line x1="8" y1="6" x2="8" y2="10" stroke="#f43f5e" strokeWidth="1.5" strokeLinecap="round" />
               <circle cx="8" cy="12" r="0.8" fill="#f43f5e" />
             </svg>
-            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+            <span style={{ fontFamily: "var(--sans)", fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
               {risk}
             </span>
           </div>

@@ -1,20 +1,20 @@
 export default function Logo({ size = 'md' }) {
-  const sizes = { sm: { dot: 7, text: 15 }, md: { dot: 9, text: 18 }, lg: { dot: 12, text: 24 } }
+  const sizes = { sm: { mark: 6, text: 13 }, md: { mark: 8, text: 16 }, lg: { mark: 10, text: 22 } }
   const s = sizes[size] || sizes.md
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{
-        width: s.dot, height: s.dot, borderRadius: '50%',
-        background: '#06b6d4',
-        boxShadow: '0 0 10px #06b6d4aa, 0 0 20px #06b6d455',
-        flexShrink: 0,
-      }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+      <svg width={s.mark * 2} height={s.mark * 2} viewBox="0 0 16 16" style={{ flexShrink: 0 }}>
+        <rect x="0" y="0" width="7" height="7" rx="1.5" fill="var(--cyan)" opacity="0.9" />
+        <rect x="9" y="0" width="7" height="7" rx="1.5" fill="var(--cyan)" opacity="0.4" />
+        <rect x="0" y="9" width="7" height="7" rx="1.5" fill="var(--cyan)" opacity="0.4" />
+        <rect x="9" y="9" width="7" height="7" rx="1.5" fill="var(--cyan)" opacity="0.15" />
+      </svg>
       <span style={{
-        fontFamily: "'DM Sans', sans-serif",
+        fontFamily: 'var(--sans)',
         fontWeight: 600,
         fontSize: s.text,
-        color: 'var(--text-base)',
-        letterSpacing: '-0.01em',
+        color: 'var(--tx-1)',
+        letterSpacing: 0,
       }}>
         NicheScope
       </span>

@@ -328,7 +328,7 @@ async def scrape_competitors(url: str) -> list[dict[str, Any]]:
     url_type = _detect_url_type(url)
     logger.debug("Detected Amazon URL type=%s for url=%s", url_type, url)
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(trust_env=False) as client:
         products: list[dict] = []
         rainforest_error: str | None = None
 
